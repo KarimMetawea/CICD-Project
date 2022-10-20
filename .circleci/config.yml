@@ -1,6 +1,17 @@
 version: 2.1
 
+orbs:
+  slack: circleci/slack@4.9.3
+
 commands:
+  notify-on-failure:
+    steps:
+      - slack/notify:
+        event: fail
+        channel: circleci-project
+        template: basic_fail_1   
+
+
   destroy-environment:
     description: Destroy back-end and front-end cloudformation stacks given a workflow ID.
     parameters:
@@ -38,8 +49,8 @@ jobs:
       - image: circleci/node:13.8.0
     steps:
       - checkout
-      # - restore_cache:
-      #     keys: [frontend-build]
+      - restore_cache:
+          keys: [frontend-build]
       - run:
           name: Build front-end
           command: |
@@ -49,14 +60,15 @@ jobs:
       - save_cache:
           paths: [frontend/node_modules]
           key: frontend-build
+      - notify-on-failure    
 
   build-backend:
     docker:
       - image: circleci/node:13.8.0
     steps:
       - checkout
-      # - restore_cache:
-      #     keys: [backend-build]
+      - restore_cache:
+          keys: [backend-build]
       - run:
           name: Back-end build
           command: |
@@ -72,36 +84,38 @@ jobs:
       - image: circleci/node:13.8.0
     steps:
       - checkout 
-      # - restore_cache:
-      #    keys: [frontend/node_modules]
+      - restore_cache:
+         keys: [frontend/node_modules]
       - run:
          name: Run frontend test
          command: |
           cd frontend 
           npm install 
           npm run test
+      - notify-on-failure    
                 
   test-backend:
     docker:
       - image: circleci/node:13.8.0
     steps:
       - checkout 
-      # - restore_cache:
-      #    keys: [backend/node_modules]
+      - restore_cache:
+         keys: [backend/node_modules]
       - run:
          name: Run backend test
          command: |
           cd backend 
           npm install 
           npm run test
-            
+      - notify-on-failure 
+
   scan-frontend:
     docker:
       - image: circleci/node:13.8.0
     steps:
       - checkout 
-      # - restore_cache:
-      #    keys: [frontend/node_modules]
+      - restore_cache:
+         keys: [frontend/node_modules]
       - run:
          name: Run frontend audit
          command: |
@@ -110,14 +124,14 @@ jobs:
           npm audit fix --audit-level=critical --force
           npm audit fix --audit-level=critical --force
           npm audit --audit-level=critical
-
+      - notify-on-failure 
   scan-backend:
     docker:
       - image: circleci/node:13.8.0
     steps:
       - checkout 
-      # - restore_cache:
-      #    keys: [backend/node_modules]
+      - restore_cache:
+         keys: [backend/node_modules]
       - run:
          name: Run backend audit
          command: |
@@ -126,7 +140,7 @@ jobs:
           npm audit fix --audit-level=critical --force
           npm audit fix --audit-level=critical --force
           npm audit --audit-level=critical
-
+      - notify-on-failure     
 #   deploy-infrastructure:
 #     docker:
 #       # Docker image here that supports AWS CLI
@@ -293,6 +307,16 @@ jobs:
 #             fi
             
 
+  notify-on-success:
+    docker:
+      - image: circleci/base
+    steps:
+      - slack/notify:
+        event: pass
+        channel: circleci-project
+        template: success_tagged_deployment 
+    
+
 workflows:
   default:
     jobs:
@@ -325,3 +349,11 @@ workflows:
       #     requires: [smoke-test]
       # - cleanup:
       #     requires: [cloudfront-update]
+      - notify-on-success:
+          requires:
+            - build-frontend
+            - build-backend
+            - test-frontend
+            - test-backend
+            - scan-backend
+            - scan-frontend
