@@ -314,7 +314,7 @@ jobs:
       - slack/notify:
          event: pass
          channel: circleci-project
-         template: success_tagged_deployment 
+         template: success_tagged_deploy_1
     
 
 workflows:
