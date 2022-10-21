@@ -1,7 +1,7 @@
 version: 2.1
 
 orbs:
-  slack: circleci/slack@4.9.3
+  slack: circleci/slack@4.10.1
 
 commands:
   notify-on-failure:
@@ -57,6 +57,7 @@ jobs:
            cd frontend
            npm install
            npm run build
+           exit 1
       - save_cache:
           paths: [frontend/node_modules]
           key: frontend-build
