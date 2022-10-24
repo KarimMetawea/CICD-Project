@@ -97,6 +97,11 @@ In this phase, you will add CircleCI jobs that execute Cloud Formation templates
         - `TYPEORM_DATABASE`={your postgres database name in RDS}
       - Install and [Configure PM2](https://www.digitalocean.com/community/tutorials/how-to-use-pm2-to-setup-a-node-js-production-environment-on-an-ubuntu-vps) to run back-end server.
 
+<!-- Master username
+postgres
+Master password
+Fkej2uiUXYDOsOhsXXU1 -->
+
 - Provide a URL to your public GitHub repository. **[URL01]**
 
 #### 2. Deploy Phase
